@@ -418,7 +418,7 @@ void main() {
         settings: settings,
       );
 
-      final database = await factory.openDatabase(
+      await factory.openDatabase(
         path: pathFile,
         factory: sqflite.databaseFactory,
       );
@@ -439,7 +439,7 @@ void main() {
         settings: settings,
       );
 
-      final database = await factory.openDatabase(
+      await factory.openDatabase(
         path: path,
         factory: sqflite.databaseFactory,
       );
