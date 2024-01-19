@@ -17,13 +17,13 @@ class SqfliteSqlEventLog extends TalkerLog {
     required TalkerSqfliteLoggerSettings settings,
   })  : _event = event,
         _settings = settings,
-        super('${event.runtimeType}');
+        super('${event.runtimeType} ${event.name}');
 
   final SqfliteLoggerSqlEvent _event;
   final TalkerSqfliteLoggerSettings _settings;
 
   @override
-  AnsiPen get pen => AnsiPen()..xterm(22);
+  AnsiPen get pen => AnsiPen()..xterm(46);
 
   @override
   String get title => 'SQflite-SQL';
@@ -48,8 +48,12 @@ class SqfliteSqlEventLog extends TalkerLog {
       map['result'] = _event.result;
     }
 
+    if (_settings.printSqlElapsedTime && _event.sw != null) {
+      map['sw'] = _event.sw!.elapsed.toString();
+    }
+
     if (_event.error != null) {
-      map['error'] = _event.error;
+      map['error'] = _event.error.toString();
     }
 
     return _prettyPrintJson(map);
@@ -67,13 +71,13 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
     required TalkerSqfliteLoggerSettings settings,
   })  : _event = event,
         _settings = settings,
-        super('${event.runtimeType}');
+        super('${event.runtimeType} ${event.name}');
 
   final SqfliteLoggerDatabaseOpenEvent _event;
   final TalkerSqfliteLoggerSettings _settings;
 
   @override
-  AnsiPen get pen => AnsiPen()..xterm(23);
+  AnsiPen get pen => AnsiPen()..xterm(47);
 
   @override
   String get title => 'SQflite-DatabaseOpen';
@@ -94,11 +98,11 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
     if (_settings.printOpenDatabaseOptions && _event.options != null) {
       map['openDatabaseOptions'] = <String, dynamic>{
         'version': _event.options?.version ?? 1,
-        'onConfigure': _event.options?.onConfigure,
-        'onCreate': _event.options?.onCreate,
-        'onUpgrade': _event.options?.onUpgrade,
-        'onDowngrade': _event.options?.onDowngrade,
-        'onOpen': _event.options?.onOpen,
+        'onConfigure': _event.options?.onConfigure != null,
+        'onCreate': _event.options?.onCreate != null,
+        'onUpgrade': _event.options?.onUpgrade != null,
+        'onDowngrade': _event.options?.onDowngrade != null,
+        'onOpen': _event.options?.onOpen != null,
         'readOnly': _event.options?.readOnly,
         'singleInstance': _event.options?.singleInstance,
       };
@@ -109,7 +113,7 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
     }
 
     if (_event.error != null) {
-      map['error'] = _event.error;
+      map['error'] = _event.error.toString();
     }
 
     return _prettyPrintJson(map);
@@ -127,16 +131,16 @@ class SqfliteDatabaseCloseEventLog extends TalkerLog {
     required TalkerSqfliteLoggerSettings settings,
   })  : _event = event,
         _settings = settings,
-        super('${event.runtimeType}');
+        super('${event.runtimeType} ${event.name}');
 
   final SqfliteLoggerDatabaseCloseEvent _event;
   final TalkerSqfliteLoggerSettings _settings;
 
   @override
-  AnsiPen get pen => AnsiPen()..xterm(24);
+  AnsiPen get pen => AnsiPen()..xterm(48);
 
   @override
-  String get title => 'SQflite - DatabaseClose';
+  String get title => 'SQflite-DatabaseClose';
 
   @override
   String generateTextMessage() {
@@ -147,12 +151,16 @@ class SqfliteDatabaseCloseEventLog extends TalkerLog {
   String _createMessage() {
     final map = <String, dynamic>{};
 
+    if (_event.db?.path != null) {
+      map['path'] = _event.db!.path;
+    }
+
     if (_settings.printSqlElapsedTime && _event.sw != null) {
       map['sw'] = _event.sw!.elapsed.toString();
     }
 
     if (_event.error != null) {
-      map['error'] = _event.error;
+      map['error'] = _event.error.toString();
     }
 
     return _prettyPrintJson(map);
@@ -170,16 +178,16 @@ class SqfliteDatabaseDeleteEventLog extends TalkerLog {
     required TalkerSqfliteLoggerSettings settings,
   })  : _event = event,
         _settings = settings,
-        super('${event.runtimeType}');
+        super('${event.runtimeType} ${event.name}');
 
   final SqfliteLoggerDatabaseDeleteEvent _event;
   final TalkerSqfliteLoggerSettings _settings;
 
   @override
-  AnsiPen get pen => AnsiPen()..xterm(25);
+  AnsiPen get pen => AnsiPen()..xterm(49);
 
   @override
-  String get title => 'SQflite - DatabaseDelete';
+  String get title => 'SQflite-DatabaseDelete';
 
   @override
   String generateTextMessage() {
@@ -199,7 +207,7 @@ class SqfliteDatabaseDeleteEventLog extends TalkerLog {
     }
 
     if (_event.error != null) {
-      map['error'] = _event.error;
+      map['error'] = _event.error.toString();
     }
 
     return _prettyPrintJson(map);
@@ -217,13 +225,13 @@ class SqfliteBatchEventLog extends TalkerLog {
     required TalkerSqfliteLoggerSettings settings,
   })  : _event = event,
         _settings = settings,
-        super('${event.runtimeType}');
+        super('${event.runtimeType} ${event.name}');
 
   final SqfliteLoggerBatchEvent _event;
   final TalkerSqfliteLoggerSettings _settings;
 
   @override
-  AnsiPen get pen => AnsiPen()..xterm(26);
+  AnsiPen get pen => AnsiPen()..xterm(50);
 
   @override
   String get title => 'SQflite-BatchSQL';
@@ -252,7 +260,6 @@ class SqfliteBatchEventLog extends TalkerLog {
 
       final operationJson = <String, dynamic>{};
 
-      operationJson['name'] = operation.name;
       operationJson['type'] = operation.type.name;
       operationJson['sql'] = operation.sql;
 
@@ -265,7 +272,7 @@ class SqfliteBatchEventLog extends TalkerLog {
       }
 
       if (operation.error != null) {
-        operationJson['error'] = operation.error;
+        operationJson['error'] = operation.error.toString();
       }
 
       operationsJson.add(operationJson);
@@ -280,7 +287,7 @@ class SqfliteBatchEventLog extends TalkerLog {
     }
 
     if (_event.error != null) {
-      map['error'] = _event.error;
+      map['error'] = _event.error.toString();
     }
 
     return _prettyPrintJson(map);
@@ -298,16 +305,16 @@ class SqfliteInvokeEventLog extends TalkerLog {
     required TalkerSqfliteLoggerSettings settings,
   })  : _event = event,
         _settings = settings,
-        super('${event.runtimeType}');
+        super('${event.runtimeType} ${event.name}');
 
   final SqfliteLoggerInvokeEvent _event;
   final TalkerSqfliteLoggerSettings _settings;
 
   @override
-  AnsiPen get pen => AnsiPen()..xterm(27);
+  AnsiPen get pen => AnsiPen()..xterm(51);
 
   @override
-  String get title => 'SQflite-InternalSQL';
+  String get title => 'SQflite-Invoke';
 
   @override
   String generateTextMessage() {
@@ -327,8 +334,12 @@ class SqfliteInvokeEventLog extends TalkerLog {
       map['result'] = _event.result;
     }
 
+    if (_settings.printSqlElapsedTime && _event.sw != null) {
+      map['sw'] = _event.sw!.elapsed.toString();
+    }
+
     if (_event.error != null) {
-      map['error'] = _event.error;
+      map['error'] = _event.error.toString();
     }
 
     return _prettyPrintJson(map);

@@ -5,7 +5,7 @@ import 'package:talker_sqflite_logger/src/sqflite_logs.dart';
 import 'package:talker_sqflite_logger/src/talker_sqflite_logger_settings.dart';
 
 /// {@template talkerSqfliteDatabaseFactory}
-/// .
+/// sqflite library logger on talker base.
 ///
 /// {@endtemplate}
 class TalkerSqfliteDatabaseFactory {
@@ -24,12 +24,14 @@ class TalkerSqfliteDatabaseFactory {
     required String path,
     OpenDatabaseOptions? options,
     DatabaseFactory? factory,
+    SqfliteDatabaseFactoryLoggerType? type =
+        SqfliteDatabaseFactoryLoggerType.all,
   }) async {
     final factoryWithLogs = SqfliteDatabaseFactoryLogger(
       factory ?? databaseFactory,
       options: SqfliteLoggerOptions(
         log: _logger,
-        type: SqfliteDatabaseFactoryLoggerType.all,
+        type: type,
       ),
     );
 
@@ -93,7 +95,7 @@ class TalkerSqfliteDatabaseFactory {
         if (_settings.sqlBatchEventFilter != null) {
           final size = _settings.sqlBatchEventFilter
                   ?.call(event.operations)
-                  .where((element) => true)
+                  .where((element) => element)
                   .length ??
               0;
 
