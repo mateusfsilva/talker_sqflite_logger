@@ -744,7 +744,6 @@ void main() {
       const settings = TalkerSqfliteLoggerSettings(
         printSqlEvents: false,
         printBatchEvents: false,
-        printInvokerEvents: true,
       );
       factory = TalkerSqfliteDatabaseFactory(
         talker: talker,

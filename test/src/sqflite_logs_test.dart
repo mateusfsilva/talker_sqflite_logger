@@ -772,9 +772,7 @@ void main() {
         result: 1,
         stopwatch: stopwatch,
       );
-      const settings = TalkerSqfliteLoggerSettings(
-        printInvokerEvents: true,
-      );
+      const settings = TalkerSqfliteLoggerSettings();
 
       final result = '''
 {

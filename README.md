@@ -1,7 +1,6 @@
 # Talker Sqflite Logger
 
-[![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
-[![Powered by Mason](https://img.shields.io/endpoint?url=https%3A%2F%2Ftinyurl.com%2Fmason-badge)](https://github.com/felangel/mason)
+[![style: lint][lint_badge]][lint_link]
 [![License: MIT][license_badge]][license_link]
 
 sqflite library logger on talker base.
@@ -13,31 +12,256 @@ sqflite library logger on talker base.
 Install via `flutter pub add`:
 
 ```sh
-dart pub add talker_sqflite_logger
+flutter pub add talker_sqflite_logger
 ```
 
 ---
 
-## Continuous Integration 🤖
+## How to use 🚀
 
-Talker Sqflite Logger comes with a built-in [GitHub Actions workflow][github_actions_link] powered by [Very Good Workflows][very_good_workflows_link] but you can also add your preferred CI/CD solution.
+To log your operations, you need to create the database using a factory:
 
-Out of the box, on each pull request and push, the CI `formats`, `lints`, and `tests` the code. This ensures the code remains consistent and behaves correctly as you add functionality or make changes. The project uses [Very Good Analysis][very_good_analysis_link] for a strict set of analysis options used by our team. Code coverage is enforced using the [Very Good Workflows][very_good_coverage_link].
+```dart
+import 'package:talker_sqflite_logger/talker_sqflite_logger.dart';
 
----
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: const TalkerSqfliteLoggerSettings(),
+);
+
+_db = await factory.openDatabase(
+  path: await _path,
+  options: OpenDatabaseOptions(),
+);
+```
+
+From now you can log the database operation:
+
+```dart
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: const TalkerSqfliteLoggerSettings(
+    printSqlEvents: false,
+    printDatabaseOpenEvents: true,
+    printOpenDatabaseOptions: true,
+    printDatabaseCloseEvents: true,
+    printDatabaseDeleteEvents: true,
+  ),
+);
+
+_db = await factory.openDatabase(
+  path: _path,
+  options: OpenDatabaseOptions(
+    version: 1,
+    onCreate: (db, version) {
+      db.execute(
+        'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)',
+      );
+    },
+  ),
+);
+
+await _db.close();
+await deleteDatabase(await _path);
+```
+
+![Database operations log](doc/database_operations_log.png)
+
+Or log your SQL queries, including the transactions:
+
+```dart
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: const TalkerSqfliteLoggerSettings(
+    printSqlResults: true,
+  ),
+);
+
+_db = await factory.openDatabase(
+  path: await _path,
+);
+
+await _db.transaction((txn) async {
+  txn.execute(
+    'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)',
+  );
+  txn.insert(
+    'Test',
+    {
+      'name': 'some name',
+      'value': 1234,
+      'num': 456.789,
+    },
+  );
+  txn.update(
+    'Test',
+    {
+      'name': 'updated name',
+      'value': '9876',
+    },
+    where: 'name = ?',
+    whereArgs: [
+      'some name',
+    ],
+  );
+});
+
+_db.query('Test');
+```
+
+![SQL queries log](doc/sql_queries_log.png)
+
+You also can log the batch operations:
+
+```dart
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: const TalkerSqfliteLoggerSettings(
+    printSqlEvents: false,
+  ),
+);
+
+_db = await factory.openDatabase(
+  path: await _path,
+);
+
+final batch = _db.batch();
+
+batch.execute(
+  'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)',
+);
+await batch.rawInsert(
+  'INSERT INTO Test(name, value, num) VALUES("some name", 1234, 456.789)',
+);
+await batch.rawUpdate(
+  'UPDATE Test SET name = ?, value = ? WHERE name = ?',
+  ['updated name', '9876', 'some name'],
+);
+
+await batch.commit();
+```
+
+![Batch operations log](doc/batch_operations_log.png)
+
+It is possible to filter the queries only to log a specific table or operation:
+
+```dart
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: TalkerSqfliteLoggerSettings(
+    sqlEventFilter: (event) => event.sql.contains('UPDATE'),
+  ),
+);
+
+_db = await factory.openDatabase(
+  path: await _path,
+);
+
+await _db.execute(
+  'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)',
+);
+await _db.rawInsert(
+  'INSERT INTO Test(name, value, num) VALUES("some name", 1234, 456.789)',
+);
+await _db.query('Test');
+await _db.rawUpdate(
+  'UPDATE Test SET name = ?, value = ? WHERE name = ?',
+  ['updated name', '9876', 'some name'],
+);
+await _db.rawQuery('SELECT * FROM Test');
+```
+
+![Filtered queries log](doc/filtered_queries_log.png)
+
+It works with batches as well:
+
+```dart
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: TalkerSqfliteLoggerSettings(
+    printSqlEvents: false,
+    sqlBatchEventFilter: (operations) => operations
+      .map(
+        (operation) => operation.sql.contains('INSERT INTO'),
+      )
+      .toList(),
+  ),
+);
+
+_db = await factory.openDatabase(
+  path: await _path,
+);
+
+final batch = _db.batch();
+
+batch.execute(
+  'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)',
+);
+await batch.rawInsert(
+  'INSERT INTO Test(name, value, num) VALUES("some name", 1234, 456.789)',
+);
+await batch.rawUpdate(
+  'UPDATE Test SET name = ?, value = ? WHERE name = ?',
+  ['updated name', '9876', 'some name'],
+);
+
+await batch.commit();
+```
+
+![Filtered batch log](doc/filtered_batch_operation_log.png)
+
+But, if you prefer logging the calls to the platform plugins, you can achieve it by passing the parameter SqfliteDatabaseFactoryLoggerType into openDatabase method:
+
+```dart
+final factory = TalkerSqfliteDatabaseFactory(
+  talker: Talker(),
+  settings: const TalkerSqfliteLoggerSettings(
+    printSqlResults: true,
+  ),
+);
+
+_db = await factory.openDatabase(
+  path: await _path,
+  type: SqfliteDatabaseFactoryLoggerType.invoke,
+);
+
+await _db.transaction((txn) async {
+  txn.execute(
+    'CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)',
+  );
+  txn.insert(
+    'Test',
+    {
+      'name': 'some name',
+      'value': 1234,
+      'num': 456.789,
+    },
+  );
+  txn.update(
+    'Test',
+    {
+      'name': 'updated name',
+      'value': '9876',
+    },
+    where: 'name = ?',
+    whereArgs: [
+      'some name',
+    ],
+  );
+});
+
+_db.query('Test');
+```
+
+![Filtered batch log](doc/invokes_01_log.png)
+![Filtered batch log](doc/invokes_02_log.png)
 
 ## Running Tests 🧪
-
-For first time users, install the [very_good_cli][very_good_cli_link]:
-
-```sh
-dart pub global activate very_good_cli
-```
 
 To run all unit tests:
 
 ```sh
-very_good test --coverage
+flutter test --coverage
 ```
 
 To view the generated coverage report you can use [lcov](https://github.com/linux-test-project/lcov).
@@ -51,17 +275,7 @@ open coverage/index.html
 ```
 
 [flutter_install_link]: https://docs.flutter.dev/get-started/install
-[github_actions_link]: https://docs.github.com/en/actions/learn-github-actions
-[license_badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[license_link]: https://opensource.org/licenses/MIT
-[logo_black]: https://raw.githubusercontent.com/VGVentures/very_good_brand/main/styles/README/vgv_logo_black.png#gh-light-mode-only
-[logo_white]: https://raw.githubusercontent.com/VGVentures/very_good_brand/main/styles/README/vgv_logo_white.png#gh-dark-mode-only
-[mason_link]: https://github.com/felangel/mason
-[very_good_analysis_badge]: https://img.shields.io/badge/style-very_good_analysis-B22C89.svg
-[very_good_analysis_link]: https://pub.dev/packages/very_good_analysis
-[very_good_cli_link]: https://pub.dev/packages/very_good_cli
-[very_good_coverage_link]: https://github.com/marketplace/actions/very-good-coverage
-[very_good_ventures_link]: https://verygood.ventures
-[very_good_ventures_link_light]: https://verygood.ventures#gh-light-mode-only
-[very_good_ventures_link_dark]: https://verygood.ventures#gh-dark-mode-only
-[very_good_workflows_link]: https://github.com/VeryGoodOpenSource/very_good_workflows
+[lint_badge]: https://img.shields.io/badge/style-lint-4BC0F5.svg
+[lint_link]: https://pub.dev/packages/lint
+[license_badge]: https://img.shields.io/badge/License-BSD_3--Clause-blue.svg
+[license_link]: https://opensource.org/licenses/BSD-3-Clause

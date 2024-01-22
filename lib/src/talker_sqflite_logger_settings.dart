@@ -16,7 +16,7 @@ class TalkerSqfliteLoggerSettings {
     this.printOpenDatabaseOptions = false,
     this.printDatabaseCloseEvents = false,
     this.printDatabaseDeleteEvents = false,
-    this.printInvokerEvents = false,
+    this.printInvokerEvents = true,
     this.printBatchEvents = true,
     this.sqlEventFilter,
     this.sqlBatchEventFilter,
