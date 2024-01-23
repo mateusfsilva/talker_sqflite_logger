@@ -91,6 +91,8 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
   String _createMessage() {
     final map = <String, dynamic>{};
 
+    map['operation'] = 'openDatabase';
+
     if (_event.path != null) {
       map['path'] = _event.path;
     }
@@ -98,11 +100,13 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
     if (_settings.printOpenDatabaseOptions && _event.options != null) {
       map['openDatabaseOptions'] = <String, dynamic>{
         'version': _event.options?.version ?? 1,
-        'onConfigure': _event.options?.onConfigure != null,
-        'onCreate': _event.options?.onCreate != null,
-        'onUpgrade': _event.options?.onUpgrade != null,
-        'onDowngrade': _event.options?.onDowngrade != null,
-        'onOpen': _event.options?.onOpen != null,
+        'onConfigure':
+            _event.options?.onConfigure != null ? 'Custom code' : null,
+        'onCreate': _event.options?.onCreate != null ? 'Custom code' : null,
+        'onUpgrade': _event.options?.onUpgrade != null ? 'Custom code' : null,
+        'onDowngrade':
+            _event.options?.onDowngrade != null ? 'Custom code' : null,
+        'onOpen': _event.options?.onOpen != null ? 'Custom code' : null,
         'readOnly': _event.options?.readOnly,
         'singleInstance': _event.options?.singleInstance,
       };
@@ -151,6 +155,8 @@ class SqfliteDatabaseCloseEventLog extends TalkerLog {
   String _createMessage() {
     final map = <String, dynamic>{};
 
+    map['operation'] = 'closeDatabase';
+
     if (_event.db?.path != null) {
       map['path'] = _event.db!.path;
     }
@@ -197,6 +203,8 @@ class SqfliteDatabaseDeleteEventLog extends TalkerLog {
   // path?, sw?, name, error?
   String _createMessage() {
     final map = <String, dynamic>{};
+
+    map['operation'] = 'deleteDatabase';
 
     if (_event.path != null) {
       map['path'] = _event.path;

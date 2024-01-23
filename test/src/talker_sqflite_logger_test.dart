@@ -440,7 +440,7 @@ void main() {
       );
 
       await factory.openDatabase(
-        path: path,
+        path: pathFile,
         factory: sqflite.databaseFactory,
       );
 
@@ -463,23 +463,21 @@ void main() {
       );
 
       await factory.openDatabase(
-        path: path,
+        path: pathFile,
         factory: sqflite.databaseFactory,
       );
 
-      await sqflite.deleteDatabase(path);
+      await sqflite.deleteDatabase(pathFile);
 
-      verify(() => talker.logTyped(any()));
+      final captured = verify(
+        () => talker.logTyped(
+          captureAny(
+            that: isA<SqfliteDatabaseDeleteEventLog>(),
+          ),
+        ),
+      ).captured;
 
-      // final captured = verify(
-      //   () => talker.logTyped(
-      //     captureAny(
-      //         that: isA<SqfliteDatabaseDeleteEventLog>(),
-      //         ),
-      //   ),
-      // ).captured;
-
-      // expect(captured.last, isA<SqfliteDatabaseDeleteEventLog>());
+      expect(captured.last, isA<SqfliteDatabaseDeleteEventLog>());
     });
   });
 
@@ -719,6 +717,7 @@ void main() {
         'Then call nothing', () async {
       const settings = TalkerSqfliteLoggerSettings(
         printSqlEvents: false,
+        printInvokerEvents: false,
       );
       factory = TalkerSqfliteDatabaseFactory(
         talker: talker,
@@ -755,44 +754,6 @@ void main() {
         factory: databaseFactory,
         type: SqfliteDatabaseFactoryLoggerType.invoke,
       );
-
-      // final batch = db.batch()
-      //   ..execute('CREATE TABLE Test '
-      //       '(id INTEGER PRIMARY KEY, '
-      //       'name TEXT, '
-      //       'value INTEGER, '
-      //       'num REAL)')
-      //   ..execute('INSERT INTO Test (name, value, num) '
-      //       'VALUES("some name", 1234, 456.789)');
-
-      // await batch.commit();
-
-      // await db.query(
-      //   'Test',
-      //   columns: [
-      //     'id',
-      //     'name',
-      //     'value',
-      //     'num',
-      //   ],
-      //   where: 'name = ?',
-      //   whereArgs: [
-      //     'some name',
-      //   ],
-      //   orderBy: 'name',
-      // );
-
-      // await db.rawUpdate(
-      //   'UPDATE Test SET name = ?, value = ? WHERE name = ?',
-      //   ['updated name', '9876', 'some name'],
-      // );
-
-      // await db.rawDelete(
-      //   'DELETE FROM Test WHERE name = ?',
-      //   ['another name'],
-      // );
-
-      // await db.execute('SELECT * FROM NotExistTable');
 
       final captured = verify(
         () => talker.logTyped(

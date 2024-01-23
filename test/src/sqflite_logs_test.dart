@@ -193,6 +193,7 @@ void main() {
 
       final result = '''
 {
+  "operation": "openDatabase",
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}"
 }''';
@@ -232,14 +233,15 @@ void main() {
 
       const result = '''
 {
+  "operation": "openDatabase",
   "path": ":memory:",
   "openDatabaseOptions": {
     "version": 1,
-    "onConfigure": false,
-    "onCreate": false,
-    "onUpgrade": false,
-    "onDowngrade": false,
-    "onOpen": false,
+    "onConfigure": null,
+    "onCreate": null,
+    "onUpgrade": null,
+    "onDowngrade": null,
+    "onOpen": null,
     "readOnly": false,
     "singleInstance": true
   }
@@ -285,6 +287,7 @@ void main() {
 
       final result = '''
 {
+  "operation": "openDatabase",
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}",
   "error": "DatabaseException(Error opening the database)"
@@ -336,6 +339,7 @@ void main() {
 
       final result = '''
 {
+  "operation": "closeDatabase",
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}"
 }''';
@@ -368,6 +372,7 @@ void main() {
 
       const result = '''
 {
+  "operation": "closeDatabase",
   "path": ":memory:"
 }''';
 
@@ -412,6 +417,7 @@ void main() {
 
       final result = '''
 {
+  "operation": "closeDatabase",
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}",
   "error": "DatabaseException(Error closing the database)"
@@ -450,6 +456,7 @@ void main() {
 
       final result = '''
 {
+  "operation": "deleteDatabase",
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}"
 }''';
@@ -482,6 +489,7 @@ void main() {
 
       const result = '''
 {
+  "operation": "deleteDatabase",
   "path": ":memory:"
 }''';
 
@@ -525,6 +533,7 @@ void main() {
 
       final result = '''
 {
+  "operation": "deleteDatabase",
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}",
   "error": "DatabaseException(Error closing the database)"
