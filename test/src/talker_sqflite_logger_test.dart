@@ -2,7 +2,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common/sqflite_logger.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:talker/talker.dart';
@@ -50,6 +49,10 @@ void main() {
     registerFallbackValue(FakeSqfliteLoggerBatchEvent());
     registerFallbackValue(FakeSqfliteLoggerInvokeEvent());
     registerFallbackValue(LogLevel.debug);
+
+    sqfliteFfiInit();
+
+    databaseFactory = databaseFactoryFfi;
   });
 
   setUp(() async {
@@ -61,12 +64,6 @@ void main() {
   });
 
   group('TalkerSqfliteDatabaseFactory', () {
-    setUpAll(() async {
-      sqfliteFfiInit();
-
-      databaseFactory = databaseFactoryFfi;
-    });
-
     test('can be instantiated', () async {
       factory = TalkerSqfliteDatabaseFactory();
 
@@ -79,12 +76,6 @@ void main() {
   });
 
   group('SqfliteLoggerSqlEvent', () {
-    setUpAll(() async {
-      sqfliteFfiInit();
-
-      databaseFactory = databaseFactoryFfi;
-    });
-
     test(
         'When log is disabled '
         'And a query is executed '
@@ -247,12 +238,6 @@ void main() {
   });
 
   group('SqfliteLoggerDatabaseOpenEvent', () {
-    setUpAll(() async {
-      sqfliteFfiInit();
-
-      databaseFactory = databaseFactoryFfi;
-    });
-
     test(
         'When log is disabled '
         'And the database is opened '
@@ -321,12 +306,6 @@ void main() {
   });
 
   group('SqfliteLoggerDatabaseCloseEvent', () {
-    setUpAll(() async {
-      sqfliteFfiInit();
-
-      databaseFactory = databaseFactoryFfi;
-    });
-
     test(
         'When log is disabled '
         'And the database is closed '
@@ -404,7 +383,7 @@ void main() {
     late String pathFile;
 
     setUp(() async {
-      final dir = await sqflite.getDatabasesPath();
+      final dir = await getDatabasesPath();
       pathFile = '$dir/teste.db';
     });
 
@@ -418,12 +397,12 @@ void main() {
         settings: settings,
       );
 
-      await factory.openDatabase(
+      db = await factory.openDatabase(
         path: pathFile,
-        factory: sqflite.databaseFactory,
+        factory: databaseFactory,
       );
 
-      await sqflite.deleteDatabase(pathFile);
+      await deleteDatabase(pathFile);
 
       verifyNever(() => talker.logTyped(any()));
     });
@@ -439,12 +418,12 @@ void main() {
         settings: settings,
       );
 
-      await factory.openDatabase(
+      db = await factory.openDatabase(
         path: pathFile,
-        factory: sqflite.databaseFactory,
+        factory: databaseFactory,
       );
 
-      await sqflite.deleteDatabase(pathFile);
+      await deleteDatabase(pathFile);
 
       verifyNever(() => talker.logTyped(any()));
     });
@@ -462,12 +441,12 @@ void main() {
         settings: settings,
       );
 
-      await factory.openDatabase(
+      db = await factory.openDatabase(
         path: pathFile,
-        factory: sqflite.databaseFactory,
+        factory: databaseFactory,
       );
 
-      await sqflite.deleteDatabase(pathFile);
+      await deleteDatabase(pathFile);
 
       final captured = verify(
         () => talker.logTyped(
@@ -754,6 +733,9 @@ void main() {
         factory: databaseFactory,
         type: SqfliteDatabaseFactoryLoggerType.invoke,
       );
+
+      await db.close();
+      await deleteDatabase(path);
 
       final captured = verify(
         () => talker.logTyped(
