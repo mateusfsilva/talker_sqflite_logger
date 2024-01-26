@@ -14,7 +14,7 @@ void main() {
         'And using the default TalkerSqfliteLoggerSettings '
         'When it calls the generateTextMessage() '
         'Then logs a message '
-        'And it will show type, SQL, arguments, and sw', () async {
+        'And it will show type, dbID, SQL, arguments, and sw', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -29,6 +29,7 @@ void main() {
       final result = '''
 {
   "type": "update",
+  "dbID": 1,
   "sql": "UPDATE Test SET name = ?, value = ? WHERE name = ?",
   "arguments": [
     "updated name",
@@ -56,7 +57,7 @@ void main() {
         'And printSqlArguments to false '
         'When it calls the generateTextMessage() '
         'Then logs a message '
-        'And it will show type, SQL, result, and sw', () async {
+        'And it will show type, dbID, SQL, result, and sw', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -69,6 +70,7 @@ void main() {
       final result = '''
 {
   "type": "delete",
+  "dbID": 1,
   "sql": "DELETE FROM Test WHERE name = ?",
   "result": 0,
   "sw": "${stopwatch.elapsed}"
@@ -97,7 +99,7 @@ void main() {
         'And printSqlElapsedTime to false '
         'When it calls the generateTextMessage() '
         'Then logs a message '
-        'And it will show type, SQL, and result', () async {
+        'And it will show type, dbID, SQL, and result', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -111,7 +113,55 @@ void main() {
       const result = '''
 {
   "type": "delete",
+  "dbID": 1,
   "sql": "DELETE FROM Test WHERE name = ?",
+  "result": 0
+}''';
+
+      final sqfliteSqlEventLog = SqfliteSqlEventLog(
+        event: event,
+        settings: settings,
+      );
+
+      final message = sqfliteSqlEventLog.generateTextMessage();
+
+      expect(
+        sqfliteSqlEventLog.message,
+        'SqfliteLoggerSqlEventImp<int> delete',
+      );
+      expect(sqfliteSqlEventLog.title, 'SQflite-SQL');
+      expect(sqfliteSqlEventLog.pen.fcolor, 46);
+      expect(message, result);
+    });
+
+    test(
+        'Given an SQL instructions '
+        'And it is inside a transaction '
+        'And calling a SqfliteSqlEventLog '
+        'And printSqlArguments to false '
+        'And printSqlElapsedTime to false '
+        'When it calls the generateTextMessage() '
+        'Then logs a message '
+        'And it will show type, dbID, SQL, and result', () async {
+      final stopwatch = Stopwatch()
+        ..start()
+        ..stop();
+      final event = getDeleteEvent(
+        stopwatch: stopwatch,
+        transactionId: 1,
+      );
+      const settings = TalkerSqfliteLoggerSettings(
+        printSqlResults: true,
+        printSqlArguments: false,
+        printSqlElapsedTime: false,
+      );
+
+      const result = '''
+{
+  "type": "delete",
+  "dbID": 1,
+  "sql": "DELETE FROM Test WHERE name = ?",
+  "txId": 1,
   "result": 0
 }''';
 
@@ -137,7 +187,7 @@ void main() {
         'And using the default TalkerSqfliteLoggerSettings '
         'When it calls the generateTextMessage() '
         'Then logs a message '
-        'And it will show type, SQL, sw, and error', () async {
+        'And it will show type, dbID, SQL, sw, and error', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -150,6 +200,7 @@ void main() {
       final result = '''
 {
   "type": "execute",
+  "dbID": 1,
   "sql": "SELECT * FROM NotExistTable",
   "sw": "${stopwatch.elapsed}",
   "error": "DatabaseException(SqliteException(1): while executing, no such table: NotExistTable, SQL logic error (code 1)\\nCausing statement: SELECT * FROM N…)"
@@ -183,7 +234,10 @@ void main() {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
-      final event = getOpenDatabaseEvent(stopwatch: stopwatch);
+      final event = getOpenDatabaseEvent(
+        stopwatch: stopwatch,
+        databaseId: 1,
+      );
       const settings = TalkerSqfliteLoggerSettings();
 
       final sqfliteSqlEventLog = SqfliteDatabaseOpenEventLog(
@@ -195,6 +249,7 @@ void main() {
 {
   "operation": "openDatabase",
   "path": ":memory:",
+  "txId": 1,
   "sw": "${stopwatch.elapsed}"
 }''';
 
@@ -325,7 +380,7 @@ void main() {
         'And using the default TalkerSqfliteLoggerSettings '
         'When it calls the generateTextMessage() '
         'Then logs a message '
-        'And it will show path, and sw', () async {
+        'And it will show operation, dbID, path, and sw', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -340,6 +395,7 @@ void main() {
       final result = '''
 {
   "operation": "closeDatabase",
+  "dbID": 1,
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}"
 }''';
@@ -361,7 +417,7 @@ void main() {
         'And setting the printSqlElapsedTime to false '
         'When it calls the generateTextMessage() '
         'Then logs a message '
-        'And it will show path, and openDatabaseOptions', () async {
+        'And it will show operation, dbID, and path', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -373,6 +429,7 @@ void main() {
       const result = '''
 {
   "operation": "closeDatabase",
+  "dbID": 1,
   "path": ":memory:"
 }''';
 
@@ -399,7 +456,7 @@ void main() {
         'When it calls the generateTextMessage() '
         'And there is an error '
         'Then logs a message '
-        'And it will show path, sw, and error', () async {
+        'And it will show operation, dbID, path, sw, and error', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -418,6 +475,7 @@ void main() {
       final result = '''
 {
   "operation": "closeDatabase",
+  "dbID": 1,
   "path": ":memory:",
   "sw": "${stopwatch.elapsed}",
   "error": "DatabaseException(Error closing the database)"
@@ -557,7 +615,7 @@ void main() {
         'And calling a SqfliteBatchEventLog '
         'And using the default TalkerSqfliteLoggerSettings '
         'When it calls generateTextMessage() '
-        'Then it will return operations, and sw', () async {
+        'Then it will return operation, dbID, operations, and sw', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -568,6 +626,64 @@ void main() {
 
       final result = '''
 {
+  "operation": "batch",
+  "dbID": 1,
+  "operations": [
+    {
+      "type": "execute",
+      "sql": "CREATE TABLE Test (id INTEGER PRIMARY KEY, name TEXT, value INTEGER, num REAL)"
+    },
+    {
+      "type": "execute",
+      "sql": "INSERT INTO Test (name, value, num) VALUES(?, ?, ?)",
+      "arguments": [
+        "some name",
+        1234,
+        456.789
+      ]
+    }
+  ],
+  "sw": "${stopwatch.elapsed}"
+}''';
+
+      final sqfliteSqlEventLog = SqfliteBatchEventLog(
+        event: event,
+        settings: settings,
+      );
+
+      final message = sqfliteSqlEventLog.generateTextMessage();
+
+      expect(
+        sqfliteSqlEventLog.message,
+        'SqfliteLoggerBatchEventImp batch',
+      );
+      expect(sqfliteSqlEventLog.title, 'SQflite-BatchSQL');
+      expect(sqfliteSqlEventLog.pen.fcolor, 50);
+      expect(message, result);
+    });
+
+    test(
+        'Given a batch query '
+        'And it is inside a transaction '
+        'And calling a SqfliteBatchEventLog '
+        'And using the default TalkerSqfliteLoggerSettings '
+        'When it calls generateTextMessage() '
+        'Then it will return operations, dbID, txId, operations, and sw',
+        () async {
+      final stopwatch = Stopwatch()
+        ..start()
+        ..stop();
+      final event = getBatchEvent(
+        stopwatch: stopwatch,
+        transactionId: 1,
+      );
+      const settings = TalkerSqfliteLoggerSettings();
+
+      final result = '''
+{
+  "operation": "batch",
+  "dbID": 1,
+  "txId": 1,
   "operations": [
     {
       "type": "execute",
@@ -608,7 +724,7 @@ void main() {
         'And using the default TalkerSqfliteLoggerSettings '
         'And printSqlElapsedTime is false '
         'When it calls generateTextMessage() '
-        'Then it will return operations', () async {
+        'Then it will return operation, dbID, and operations', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -621,6 +737,8 @@ void main() {
 
       const result = '''
 {
+  "operation": "batch",
+  "dbID": 1,
   "operations": [
     {
       "type": "execute",
@@ -662,7 +780,7 @@ void main() {
         'And printSqlArguments is false '
         'And printSqlResults is true '
         'When it calls generateTextMessage() '
-        'Then it will return operations', () async {
+        'Then it will return operation, dbID, and operations', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -677,6 +795,8 @@ void main() {
 
       const result = '''
 {
+  "operation": "batch",
+  "dbID": 1,
   "operations": [
     {
       "type": "execute",
@@ -714,7 +834,7 @@ void main() {
         'And printSqlArguments is false '
         'When it calls generateTextMessage() '
         'And there is an exception '
-        'Then it will return operations, and error', () async {
+        'Then it will return operation, dbID, operations, and error', () async {
       final stopwatch = Stopwatch()
         ..start()
         ..stop();
@@ -730,6 +850,8 @@ void main() {
       // ignore: use_raw_strings
       const result = '''
 {
+  "operation": "batch",
+  "dbID": 1,
   "operations": [
     {
       "type": "execute",

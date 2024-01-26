@@ -18,6 +18,7 @@ class TalkerSqfliteDatabaseFactory {
 
   final Talker _talker;
   final TalkerSqfliteLoggerSettings _settings;
+  late SqfliteDatabaseFactoryLogger _factoryWithLogs;
 
   /// .
   Future<Database> openDatabase({
@@ -27,7 +28,7 @@ class TalkerSqfliteDatabaseFactory {
     SqfliteDatabaseFactoryLoggerType? type =
         SqfliteDatabaseFactoryLoggerType.all,
   }) async {
-    final factoryWithLogs = SqfliteDatabaseFactoryLogger(
+    _factoryWithLogs = SqfliteDatabaseFactoryLogger(
       factory ?? databaseFactory,
       options: SqfliteLoggerOptions(
         log: _logger,
@@ -35,11 +36,17 @@ class TalkerSqfliteDatabaseFactory {
       ),
     );
 
-    return factoryWithLogs.openDatabase(
+    return _factoryWithLogs.openDatabase(
       path,
       options: options,
     );
   }
+
+  ///
+  Future<void> deleteDatabase(
+    String path,
+  ) =>
+      _factoryWithLogs.deleteDatabase(path);
 
   void _logger(SqfliteLoggerEvent event) {
     if (!_settings.enabled) {

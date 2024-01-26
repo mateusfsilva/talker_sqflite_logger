@@ -33,12 +33,18 @@ class SqfliteSqlEventLog extends TalkerLog {
     return _createMessage();
   }
 
-  // client, type, sql, arguments?, result?, name, error?
+  // client, type, sql, arguments?, result?, name, error?, databaseId,
+  // transactionId?
   String _createMessage() {
     final map = <String, dynamic>{};
 
     map['type'] = _event.type.name;
+    map['dbID'] = _event.databaseId;
     map['sql'] = _event.sql;
+
+    if (_event.transactionId != null) {
+      map['txId'] = _event.transactionId;
+    }
 
     if (_settings.printSqlArguments && _event.arguments != null) {
       map['arguments'] = _event.arguments;
@@ -87,7 +93,7 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
     return _createMessage();
   }
 
-  // options? (OpenDatabaseOptions), path?, db?, sw?, name, error?
+  // options? (OpenDatabaseOptions), path?, db?, sw?, name, error?, databaseId?
   String _createMessage() {
     final map = <String, dynamic>{};
 
@@ -95,6 +101,10 @@ class SqfliteDatabaseOpenEventLog extends TalkerLog {
 
     if (_event.path != null) {
       map['path'] = _event.path;
+    }
+
+    if (_event.databaseId != null) {
+      map['txId'] = _event.databaseId;
     }
 
     if (_settings.printOpenDatabaseOptions && _event.options != null) {
@@ -151,11 +161,12 @@ class SqfliteDatabaseCloseEventLog extends TalkerLog {
     return _createMessage();
   }
 
-  // db?, sw?, name, error?
+  // db?, sw?, name, error?, databaseId
   String _createMessage() {
     final map = <String, dynamic>{};
 
     map['operation'] = 'closeDatabase';
+    map['dbID'] = _event.databaseId;
 
     if (_event.db?.path != null) {
       map['path'] = _event.db!.path;
@@ -250,7 +261,7 @@ class SqfliteBatchEventLog extends TalkerLog {
   }
 
   // operations (type, sql, arguments?, result?, name, error?), client, sw?,
-  // name, error?
+  // name, error?, databaseId, transactionId?
   String _createMessage() {
     final map = <String, dynamic>{};
     final operationsJson = <Map<String, dynamic>>[];
@@ -284,6 +295,13 @@ class SqfliteBatchEventLog extends TalkerLog {
       }
 
       operationsJson.add(operationJson);
+    }
+
+    map['operation'] = 'batch';
+    map['dbID'] = _event.databaseId;
+
+    if (_event.transactionId != null) {
+      map['txId'] = _event.transactionId;
     }
 
     if (operationsJson.isNotEmpty) {

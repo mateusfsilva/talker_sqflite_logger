@@ -27,6 +27,8 @@ class SqfliteLoggerSqlEventImp<T> extends SqfliteLoggerSqlEvent<T> {
     required this.name,
     required this.sql,
     required this.type,
+    required this.databaseId,
+    this.transactionId,
     this.arguments,
     this.result,
     this.sw,
@@ -56,12 +58,19 @@ class SqfliteLoggerSqlEventImp<T> extends SqfliteLoggerSqlEvent<T> {
 
   @override
   final SqliteSqlCommandType type;
+
+  @override
+  final int databaseId;
+
+  @override
+  final int? transactionId;
 }
 
 class SqfliteLoggerDatabaseOpenEventImp extends SqfliteLoggerDatabaseOpenEvent {
   SqfliteLoggerDatabaseOpenEventImp({
     required this.name,
     this.db,
+    this.databaseId,
     this.error,
     this.options,
     this.path,
@@ -69,44 +78,51 @@ class SqfliteLoggerDatabaseOpenEventImp extends SqfliteLoggerDatabaseOpenEvent {
   });
 
   @override
-  Database? db;
+  final Database? db;
 
   @override
-  Object? error;
+  final Object? error;
 
   @override
-  String name;
+  final String name;
 
   @override
-  OpenDatabaseOptions? options;
+  final OpenDatabaseOptions? options;
 
   @override
-  String? path;
+  final String? path;
 
   @override
-  Stopwatch? sw;
+  final Stopwatch? sw;
+
+  @override
+  final int? databaseId;
 }
 
 class SqfliteLoggerDatabaseCloseEventImp
     extends SqfliteLoggerDatabaseCloseEvent {
   SqfliteLoggerDatabaseCloseEventImp({
     required this.name,
+    required this.databaseId,
     this.db,
     this.error,
     this.sw,
   });
 
   @override
-  Database? db;
+  final Database? db;
 
   @override
-  Object? error;
+  final Object? error;
 
   @override
-  String name;
+  final String name;
 
   @override
-  Stopwatch? sw;
+  final Stopwatch? sw;
+
+  @override
+  final int databaseId;
 }
 
 class SqfliteLoggerDatabaseDeleteEventImp
@@ -119,41 +135,49 @@ class SqfliteLoggerDatabaseDeleteEventImp
   });
 
   @override
-  Object? error;
+  final Object? error;
 
   @override
-  String name;
+  final String name;
 
   @override
-  String? path;
+  final String? path;
 
   @override
-  Stopwatch? sw;
+  final Stopwatch? sw;
 }
 
 class SqfliteLoggerBatchEventImp extends SqfliteLoggerBatchEvent {
   SqfliteLoggerBatchEventImp({
     required this.client,
+    required this.databaseId,
     required this.name,
     required this.operations,
+    this.transactionId,
     this.sw,
     this.error,
   });
 
   @override
-  DatabaseExecutor client;
+  final DatabaseExecutor client;
 
   @override
-  Object? error;
+  final Object? error;
 
   @override
-  String name;
+  final String name;
 
   @override
-  List<SqfliteLoggerBatchOperation<dynamic>> operations;
+  final List<SqfliteLoggerBatchOperation<dynamic>> operations;
 
   @override
-  Stopwatch? sw;
+  final Stopwatch? sw;
+
+  @override
+  final int databaseId;
+
+  @override
+  final int? transactionId;
 }
 
 class SqfliteLoggerBatchOperationImp<T> extends SqfliteLoggerBatchOperation<T> {
@@ -167,22 +191,22 @@ class SqfliteLoggerBatchOperationImp<T> extends SqfliteLoggerBatchOperation<T> {
   });
 
   @override
-  Object? arguments;
+  final Object? arguments;
 
   @override
-  Object? error;
+  final Object? error;
 
   @override
-  String name;
+  final String name;
 
   @override
-  T? result;
+  final T? result;
 
   @override
-  String sql;
+  final String sql;
 
   @override
-  SqliteSqlCommandType type;
+  final SqliteSqlCommandType type;
 }
 
 class SqfliteLoggerInvokeEventImp extends SqfliteLoggerInvokeEvent {
@@ -196,22 +220,22 @@ class SqfliteLoggerInvokeEventImp extends SqfliteLoggerInvokeEvent {
   });
 
   @override
-  Object? arguments;
+  final Object? arguments;
 
   @override
-  Object? error;
+  final Object? error;
 
   @override
-  String method;
+  final String method;
 
   @override
-  String name;
+  final String name;
 
   @override
-  Object? result;
+  final Object? result;
 
   @override
-  Stopwatch? sw;
+  final Stopwatch? sw;
 }
 
 SqfliteLoggerSqlEvent<int> getUpdateEvent({
@@ -222,6 +246,7 @@ SqfliteLoggerSqlEvent<int> getUpdateEvent({
       name: 'update',
       sql: 'UPDATE Test SET name = ?, value = ? WHERE name = ?',
       type: SqliteSqlCommandType.update,
+      databaseId: 1,
       arguments: [
         'updated name',
         '9876',
@@ -233,12 +258,15 @@ SqfliteLoggerSqlEvent<int> getUpdateEvent({
 
 SqfliteLoggerSqlEvent<int> getDeleteEvent({
   required Stopwatch stopwatch,
+  int? transactionId,
 }) =>
     SqfliteLoggerSqlEventImp<int>(
       client: MockDatabaseExecutor(),
       name: 'delete',
       sql: 'DELETE FROM Test WHERE name = ?',
       type: SqliteSqlCommandType.delete,
+      databaseId: 1,
+      transactionId: transactionId,
       arguments: [
         'another name',
       ],
@@ -257,6 +285,7 @@ SqfliteLoggerSqlEvent<List<Map<String, Object?>>> getQueryEvent({
           'WHERE name = ? '
           'ORDER BY name',
       type: SqliteSqlCommandType.query,
+      databaseId: 1,
       arguments: ['some name'],
       result: [
         {
@@ -277,6 +306,7 @@ SqfliteLoggerSqlEvent<dynamic> getErrorEvent({
       name: 'execute',
       sql: 'SELECT * FROM NotExistTable',
       type: SqliteSqlCommandType.execute,
+      databaseId: 1,
       sw: stopwatch,
       error: DatabaseExceptionImp(
         'SqliteException(1): while executing, no such table: NotExistTable, '
@@ -287,11 +317,13 @@ SqfliteLoggerSqlEvent<dynamic> getErrorEvent({
 
 SqfliteLoggerDatabaseOpenEvent getOpenDatabaseEvent({
   required Stopwatch stopwatch,
+  int? databaseId,
   OpenDatabaseOptions? options,
   Object? error,
 }) =>
     SqfliteLoggerDatabaseOpenEventImp(
       name: 'openDatabase',
+      databaseId: databaseId,
       path: ':memory:',
       sw: stopwatch,
       options: options,
@@ -305,6 +337,7 @@ SqfliteLoggerDatabaseCloseEvent getCloseDatabaseEvent({
 }) =>
     SqfliteLoggerDatabaseCloseEventImp(
       name: 'closeDatabase',
+      databaseId: 1,
       db: db,
       sw: stopwatch,
       error: error,
@@ -353,10 +386,13 @@ SqfliteLoggerBatchOperation<int> getInsertEvent({
 
 SqfliteLoggerBatchEvent getBatchEvent({
   required Stopwatch stopwatch,
+  int? transactionId,
   Object? error,
 }) =>
     SqfliteLoggerBatchEventImp(
       client: MockDatabaseExecutor(),
+      databaseId: 1,
+      transactionId: transactionId,
       name: 'batch',
       operations: [
         getCreateTableEvent(

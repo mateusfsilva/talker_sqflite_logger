@@ -402,7 +402,7 @@ void main() {
         factory: databaseFactory,
       );
 
-      await deleteDatabase(pathFile);
+      await factory.deleteDatabase(pathFile);
 
       verifyNever(() => talker.logTyped(any()));
     });
@@ -423,7 +423,7 @@ void main() {
         factory: databaseFactory,
       );
 
-      await deleteDatabase(pathFile);
+      await factory.deleteDatabase(pathFile);
 
       verifyNever(() => talker.logTyped(any()));
     });
@@ -446,7 +446,7 @@ void main() {
         factory: databaseFactory,
       );
 
-      await deleteDatabase(pathFile);
+      await factory.deleteDatabase(pathFile);
 
       final captured = verify(
         () => talker.logTyped(
