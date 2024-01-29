@@ -16,7 +16,7 @@ class TalkerObserverImp implements TalkerObserver {
       err.generateTextMessage(),
       time: err.time,
       level: Level.SEVERE.value,
-      name: err.title,
+      name: err.title ?? err.displayMessage,
       error: err.error,
       stackTrace: err.stackTrace,
     );
@@ -28,20 +28,20 @@ class TalkerObserverImp implements TalkerObserver {
       err.generateTextMessage(),
       time: err.time,
       level: Level.SHOUT.value,
-      name: err.title,
+      name: err.title ?? err.displayMessage,
       error: err.error,
       stackTrace: err.stackTrace,
     );
   }
 
   @override
-  void onLog(TalkerDataInterface log) {
-    // developer.log(
-    //   log.generateTextMessage(),
-    //   time: log.time,
-    //   level: Level.INFO.value,
-    //   name: log.title,
-    // );
+  void onLog(TalkerData log) {
+    developer.log(
+      log.generateTextMessage(),
+      time: log.time,
+      level: Level.INFO.value,
+      name: log.title ?? log.displayMessage,
+    );
   }
 }
 
